@@ -1,11 +1,12 @@
-name: CI Docker Build for Petclinic
+# .github/workflows/docker-build.yml
+name: CI Build and Push to GCR
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,17 +16,17 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Cache Maven packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
+    - name: Decode GCP service account key
+      run: echo "${{ secrets.GCP_SA_KEY }}" > key.json
 
-    - name: Build Docker Image
+    - name: Login to GCR
+      run: |
+        gcloud auth activate-service-account --key-file=key.json
+        gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+
+    - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
         context: .
-        push: false 
-        tags: ay-petclinic:1.0
+        push: true
+        tags: asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ay-repo/petclinic:1.0
