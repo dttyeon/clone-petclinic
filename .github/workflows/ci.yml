@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+    - name: Install yq
+      run: sudo wget -O /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && sudo chmod +x /usr/bin/yq
+
     - name: Checkout source code
       uses: actions/checkout@v3
 
@@ -24,9 +28,56 @@ jobs:
         gcloud auth activate-service-account --key-file=key.json
         gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
+    - name: Get latest GCR image tag
+      id: get_latest
+      run: |
+        # 오늘 날짜
+        DATE=$(date +%Y%m%d)
+        
+        # 가장 최신 태그 가져오기 (없으면 기본값)
+        TAG=$(gcloud artifacts docker images list asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ay-repo/was \
+          --format="value(TAGS)" --limit=10 | grep -Eo '^[0-9]+\.[0-9]+\.[0-9]+-[0-9]{8}' | sort -V | tail -n 1 || echo "1.0.0-${DATE}")
+        
+        if [[ -z "$TAG" ]]; then
+          TAG="1.0.0-${DATE}"
+        fi
+        echo "Latest tag: $TAG"
+
+        # semantic part 추출 (예: 1.0.2-20250629 → 1.0.2)
+        SEMVER=$(echo $TAG | cut -d '-' -f1)
+        MAJOR=$(echo $SEMVER | cut -d '.' -f1)
+        MINOR=$(echo $SEMVER | cut -d '.' -f2)
+        PATCH=$(echo $SEMVER | cut -d '.' -f3)
+
+        # 비어 있으면 0으로 초기화
+        MAJOR=${MAJOR:-0}
+        MINOR=${MINOR:-0}
+        PATCH=${PATCH:-0}
+
+        # 버전 증가
+        NEXT_PATCH=$((PATCH + 1))
+        NEW_SEMVER="${MAJOR}.${MINOR}.${NEXT_PATCH}"
+        IMAGE_TAG="${NEW_SEMVER}-${DATE}"
+
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
         context: .
         push: true
-        tags: asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ay-repo/was:1.0
+        tags: asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ay-repo/was:${{ env.IMAGE_TAG }}
+
+    - name: Update image tag in CD repo
+      run: |
+        git clone https://x-access-token:${{ secrets.CD_REPO_TOKEN }}@github.com/dttyeon/cd-repo.git
+        cd cd-repo/was
+
+        export WAS_TAG="${{ env.IMAGE_TAG }}"
+        yq e '.was.image.tag = strenv(WAS_TAG)' -i values.yaml
+
+        git config user.name "CI Bot"
+        git config user.email "ci-bot@example.com"
+        git commit -am "Update image tag to was= ${IMAGE_TAG}"
+        git push
