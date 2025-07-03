@@ -36,7 +36,8 @@ jobs:
         
         # 가장 최신 태그 가져오기 (없으면 기본값)
         TAG=$(gcloud artifacts docker tags list asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ay-repo/was \
-        --limit=10 | grep -Eo 'TAG: [0-9]+\.[0-9]+\.[0-9]+-[0-9]{8}' | awk '{print $2}' | sort -V | tail -n 1 || echo "1.0.0-${DATE}")
+        --limit=10 | grep -Eo 'TAG: [0-9]+\.[0-9]+\.[0-9]+-[0-9]{8}' 
+        | awk '{print $2}' | sort -V | tail -n 1 || echo "1.0.0-${DATE}")
 
         if [[ -z "$TAG" ]]; then
           TAG="1.0.0-${DATE}"
