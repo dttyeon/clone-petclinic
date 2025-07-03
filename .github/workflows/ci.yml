@@ -41,7 +41,7 @@ jobs:
         if [[ -z "$LTAG" ]]; then
           TAG="1.0.0-${DATE}"
         else
-          TAG="$L-TAG"
+          TAG="$LTAG"
         fi
 
         # semantic part 추출 (예: 1.0.2-20250629 → 1.0.2)
