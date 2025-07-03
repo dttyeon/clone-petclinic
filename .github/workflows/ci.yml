@@ -35,12 +35,9 @@ jobs:
         DATE=$(date +%Y%m%d)
         
         # 가장 최신 태그 가져오기 (없으면 기본값)
-        LTAG=$(gcloud artifacts docker tags list ${REPO_PATH} \
+        LTAG=$(gcloud artifacts docker tags list "asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ay-repo"/was \
         --format="value(tag)" \
-        --filter="tag ~ '^[0-9]+\.[0-9]+\.[0-9]+-[0-9]{8}$'" \
-        --sort-by="~tag" \ 
-        --limit=1 \ 
-        || echo "")
+        --sort-by="~tag" --limit=1 )
 
         if [[ -z "$LTAG" ]]; then
           TAG="1.0.0-${DATE}"
