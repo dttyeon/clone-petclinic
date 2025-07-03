@@ -35,16 +35,21 @@ jobs:
         DATE=$(date +%Y%m%d)
         
         # 가장 최신 태그 가져오기 (없으면 기본값)
-        LTAG=$(gcloud artifacts docker tags list asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ay-repo/was \
-        --limit=10 | grep -Eo 'TAG: [0-9]+\.[0-9]+\.[0-9]+-[0-9]{8}' | awk '{print $2}' | sort -V | tail -n 1)
+        LTAG=$(gcloud artifacts docker tags list ${REPO_PATH} \
+        --format="value(tag)" \
+        --filter="tag ~ '^[0-9]+\.[0-9]+\.[0-9]+-[0-9]{8}$'" \
+        --sort-by="~tag" \ 
+        --limit=1 \ 
+        || echo "")
 
         if [[ -z "$LTAG" ]]; then
           TAG="1.0.0-${DATE}"
         else
           TAG="$LTAG"
+          echo "최신 태그를 찾았습니다: $TAG"
         fi
 
-        # semantic part 추출 (예: 1.0.2-20250629 → 1.0.2)
+        # semantic part 추출
         SEMVER=$(echo $TAG | cut -d '-' -f1)
         MAJOR=$(echo $SEMVER | cut -d '.' -f1)
         MINOR=$(echo $SEMVER | cut -d '.' -f2)
