@@ -1,4 +1,4 @@
-package org.springframework.samples.petclinic.metrics;
+package org.springframework.samples.petclinic;
 
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 
