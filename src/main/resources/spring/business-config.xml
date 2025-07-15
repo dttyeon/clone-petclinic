@@ -94,14 +94,9 @@
         <jpa:repositories base-package="org.springframework.samples.petclinic.repository.springdatajpa"/>
     </beans>
     
-    <!-- 프로메테우스 추가 -->
     <bean id="prometheusConfig" class="io.micrometer.prometheus.PrometheusConfig" factory-method="DEFAULT" />
 
     <bean id="prometheusMeterRegistry" class="io.micrometer.prometheus.PrometheusMeterRegistry">
         <constructor-arg ref="prometheusConfig" />
     </bean>
 </beans>
-
-
-
-
