@@ -82,20 +82,7 @@ public class PetclinicInitializer extends AbstractDispatcherServletInitializer {
     @Override
     public void onStartup(ServletContext servletContext) throws ServletException {
         super.onStartup(servletContext);
-
-        // root application context에서 prometheusMeterRegistry 빈을 꺼내야 하는데
-        WebApplicationContext rootContext = (WebApplicationContext) servletContext
-                .getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
-        PrometheusMeterRegistry prometheusMeterRegistry = rootContext.getBean(PrometheusMeterRegistry.class);
-
         servletContext.addListener(new PrometheusMetricsServletContextListener());
-
-        // PrometheusMetricsServlet 생성 및 등록
-        PrometheusMetricsServlet metricsServlet = new PrometheusMetricsServlet(prometheusMeterRegistry);
-        ServletRegistration.Dynamic servlet = servletContext.addServlet("prometheusMetrics", metricsServlet);
-        servlet.addMapping("/metrics");
-        servlet.setLoadOnStartup(1);
-
     }
 
 }
