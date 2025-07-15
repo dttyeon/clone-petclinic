@@ -95,9 +95,17 @@
     </beans>
 </beans>
 
-<!-- 프로메테우스 추가 -->
-<bean id="prometheusConfig" class="io.micrometer.prometheus.PrometheusConfig" factory-method="DEFAULT" />
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-<bean id="prometheusMeterRegistry" class="io.micrometer.prometheus.PrometheusMeterRegistry">
-    <constructor-arg ref="prometheusConfig" />
-</bean>
+    <!-- 프로메테우스 추가 -->
+    <bean id="prometheusConfig" class="io.micrometer.prometheus.PrometheusConfig" factory-method="DEFAULT" />
+
+    <bean id="prometheusMeterRegistry" class="io.micrometer.prometheus.PrometheusMeterRegistry">
+        <constructor-arg ref="prometheusConfig" />
+    </bean>
+
+</beans>
